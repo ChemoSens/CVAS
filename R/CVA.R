@@ -1,3 +1,53 @@
+#' CVA
+#' Performs the Canonical Variate Analysis (CVA) for a dataset of sensory profile
+#' @param data data whose colnames are the names defined as product, subject, replicate, first Attribute, .... ,last Attribute
+#' @param test MANOVA statistic used for the test. By default "Hotelling-Lawley" but "Wilks", "Roy" and "Pilai" are also available
+#' @param option Corresponds to the choice of the model used in CVA :"tw" for Two-Way ANOVA, "ow", for One-Way ANOVA, "tws" for the Two-Way ANOVA without taking into account the subject effect in the ellipses, "mam" for the multivariate MAM model (taking the scaling effect into account) "overall" for the multivariate model taking only the psychological scaling effect into account. By default "tw". Note that the subject effect is random.
+#' @param hotellingTableBool if TRUE, the Hotelling table (where the multidimensional differences between products are tested) is calculated
+#' @param nbAxes  either a number of axes or  "auto" which return a number of axes equaling the number of significant dimensions. "auto" by default
+#' @param alpha limit of the test of significant dimensions. By default 0.05
+#' @param productName name of the column containing the products. By default "product"
+#' @param subjectName name of the column containing the subjects. By default "subject"
+#' @param replicateName  name of the column containing the replicates. By default "rep"
+#' @param sessionName if necessary, name of the column containing the sessions. By default "session"
+#' @param representation if "biplot", the graph resulting of this CVA is a biplot, ifelse, it is a graph composed with a product map and an attribute map
+#' @return{
+#' a list containing
+#'\itemize{
+#'\item{IndivCoord }{coordinates of the products}
+#'\item{VarCoord }{coordinates of the attributes}
+#'\item{NbDimSig }{number of significant dimensions}
+#'\item{HotellingTable }{table containing the results of T2 Hotelling tests for all product pairs}
+#'\item{ConditioningOfW }{condition index of W. If ConditioningOfW >30, the matrix is ill-conditionned and CVA can be unstable}
+#'\item{B }{covariance matrix of product effect}
+#'\item{W}{covariance matrix of interaction}
+#'\item{EigenVectors}{W-orthonormalized eigenvectors of W^(-1)B}
+#'\item{EigenValues}{eigenvalues of W^(-1)B}
+#'\item{Stats}{list containing the MANOVA statistics (statistics, approximated F and pvalue)}
+#'\item{decomposition}{table with the decomposition of each score according to the different effects}
+#'\item{CenteredProductSubjectTable}{centered product by subject table}
+#'\item{nbAxes}{number of axes, useful if nbAxes="auto" was chosen}
+#'\item{wDemi}{matrix of weigths used in the biplot}
+#'\item{option}{returns the chosen model}
+#'\item{representation}{if "biplot", the plot related to this CVA is a biplot. If else, it will be two graphs: a product map and an attribute map}
+#'}
+#' }
+#' @references Peltier, C., Visalli, M., Schlich, P. (2015) Canonical Variate Analysis of sensory profiling data. Journal of Sensory Studies 30 p 316-328
+#' @seealso \code{\link{PlotCVA}}
+#' @examples{
+#'data(cheeses)
+#'resCVA=CVA(cheeses,option="tw",productName="ProductCode",
+#'subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+#'PlotCVA(resCVA)
+#'resMAMCVA=CVA(cheeses,option="mam",productName="ProductCode",
+#'subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+#'PlotCVA(resMAMCVA)
+#'resOverallCVA=CVA(cheeses,option="overall",productName="ProductCode",
+#'subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+#'PlotCVA(resMAMCVA)
+#'}
+#' @importFrom stats pchisq cor lm manova aggregate
+#' @export
 CVA <-
 function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = TRUE,
     nbAxes = "auto", alpha = 0.1, productName = "product", subjectName = "subject",

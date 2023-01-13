@@ -1,10 +1,11 @@
+#'@import ellipse
+#'@importFrom stats cov qf qchisq
 CalculateEllipses <-
-function (suppIndividualTable, vep, axes = c(1, 2), confInt = 0.9, 
-    ellipsesType = "barycentric", productName = "ProductCode", 
-    subjectName = "SubjectCode", ellipsesCalculation = "Chi") 
+function (suppIndividualTable, vep, axes = c(1, 2), confInt = 0.9,
+    ellipsesType = "barycentric", productName = "ProductCode",
+    subjectName = "SubjectCode", ellipsesCalculation = "Chi")
 {
-    LoadPackage("ellipse")
-    products = levels(as.factor(as.character(suppIndividualTable[, 
+    products = levels(as.factor(as.character(suppIndividualTable[,
         productName])))
     nb.prod = length(products)
     suj = levels(as.factor(suppIndividualTable[, subjectName]))
@@ -18,7 +19,7 @@ function (suppIndividualTable, vep, axes = c(1, 2), confInt = 0.9,
     ax2 = axes[2]
     coorCentre = data.frame()
     for (i in 1:nb.prod) {
-        indiv.sup = as.matrix(suppIndividualTable[suppIndividualTable[, 
+        indiv.sup = as.matrix(suppIndividualTable[suppIndividualTable[,
             productName] == products[i], 3:ncol(suppIndividualTable)])
         coord.indiv.sup = indiv.sup %*% vep
         coorCentre[i, 1] = mean(coord.indiv.sup[, ax1], na.rm = TRUE)
@@ -34,30 +35,30 @@ function (suppIndividualTable, vep, axes = c(1, 2), confInt = 0.9,
         if (ellipsesType == "individual") {
             covarianceMatrix = matCov
         }
-        quant = sqrt(2 * nb.suj * qf(confInt, 2, nb.suj - 2)/(nb.suj - 
+        quant = sqrt(2 * nb.suj * qf(confInt, 2, nb.suj - 2)/(nb.suj -
             2))
         if (ellipsesCalculation == "Chi") {
             quant = sqrt(qchisq(confInt, 2))
         }
         if (ellipsesCalculation == "F") {
-            quant = sqrt(2 * nb.suj * qf(confInt, 2, nb.suj - 
+            quant = sqrt(2 * nb.suj * qf(confInt, 2, nb.suj -
                 2)/(nb.suj - 2))
         }
         if (ellipsesCalculation == "Sas") {
-            quant = sqrt((2 * nb.suj * qf(confInt, 2, nb.suj - 
+            quant = sqrt((2 * nb.suj * qf(confInt, 2, nb.suj -
                 2)/(nb.suj - 2)) * (nb.suj - 1)/nb.suj)
         }
-        ell[i, , 1] = ellipse::ellipse(x = covarianceMatrix, 
-            centre = c(coorCentre[i, 1], coorCentre[i, 2]), level = confInt, 
+        ell[i, , 1] = ellipse::ellipse(x = covarianceMatrix,
+            centre = c(coorCentre[i, 1], coorCentre[i, 2]), level = confInt,
             t = quant)[, 1]
-        ell[i, , 2] = ellipse::ellipse(x = covarianceMatrix, 
-            centre = c(coorCentre[i, 1], coorCentre[i, 2]), level = confInt, 
+        ell[i, , 2] = ellipse::ellipse(x = covarianceMatrix,
+            centre = c(coorCentre[i, 1], coorCentre[i, 2]), level = confInt,
             t = quant)[, 2]
-        ell[i, , 1] = ellipse::ellipse(covarianceMatrix, centre = c(coorCentre[i, 
-            1], coorCentre[i, 2]), level = confInt, t = quant)[, 
+        ell[i, , 1] = ellipse::ellipse(covarianceMatrix, centre = c(coorCentre[i,
+            1], coorCentre[i, 2]), level = confInt, t = quant)[,
             1]
-        ell[i, , 2] = ellipse::ellipse(covarianceMatrix, centre = c(coorCentre[i, 
-            1], coorCentre[i, 2]), level = confInt, t = quant)[, 
+        ell[i, , 2] = ellipse::ellipse(covarianceMatrix, centre = c(coorCentre[i,
+            1], coorCentre[i, 2]), level = confInt, t = quant)[,
             2]
     }
     L = list(coord.pts, ell, coorCentre)

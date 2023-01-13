@@ -1,5 +1,6 @@
+#'@importFrom stats pf
 HotellingTest <-
-function (matx, maty) 
+function (matx, maty)
 {
     egalite = function(x, y) {
         bool = TRUE
@@ -30,12 +31,12 @@ function (matx, maty)
     W = (W1 + W2)/(2 * nb.suj - 2)
     if (det(W) > 1e-08) {
         Winv = solve(W)
-        T2 = ((nb.suj * nb.suj)/(2 * nb.suj)) * (t(moyx - moyy) %*% 
+        T2 = ((nb.suj * nb.suj)/(2 * nb.suj)) * (t(moyx - moyy) %*%
             Winv %*% (moyx - moyy))
         t2 = T2[1, 1]
-        stat = t2 * (2 * nb.suj - nb.att - 1)/((2 * nb.suj - 
+        stat = t2 * (2 * nb.suj - nb.att - 1)/((2 * nb.suj -
             2) * nb.att)
-        p.value = pf(stat, df1 = nb.att, df2 = 2 * nb.suj - 1 - 
+        p.value = pf(stat, df1 = nb.att, df2 = 2 * nb.suj - 1 -
             nb.att, lower.tail = FALSE)
     }
     else {

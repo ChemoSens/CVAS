@@ -1,10 +1,12 @@
+#'@importFrom stats t.test cor.test pf
+#'@import doBy
 PanelPerformances <-
-function (frame, modelType = "overall", negativeCorrection = TRUE, 
-    correctOnlyIfSignificant = FALSE, limitOfSignificance = 0.05, 
-    onlySignificantDim = FALSE, manovaTest = "Hotelling", panelistPerf = FALSE, 
-    correlationTest = "none") 
+function (frame, modelType = "overall", negativeCorrection = TRUE,
+    correctOnlyIfSignificant = FALSE, limitOfSignificance = 0.05,
+    onlySignificantDim = FALSE, manovaTest = "Hotelling", panelistPerf = FALSE,
+    correlationTest = "none")
 {
-    LoadPackage("doBy")
+
     attnames = labels(frame)[[2]][-1:-3]
     natt = length(attnames)
     ass = factor(as.character(frame[, 1]))
@@ -27,18 +29,18 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         modelType = "classic"
         print("Less than 2 replicates, the scaling option is impossible, classic option is run")
     }
-    if ((correlationTest == "pearson" | correlationTest == "kendall" | 
+    if ((correlationTest == "pearson" | correlationTest == "kendall" |
         correlationTest == "spearman") & nprod < 3) {
         print("Not enough products for correlations")
         correlationTest = "none"
     }
-    ListResults = MultiMAM(frame = frame, modelType = modelType, 
-        negativeCorrection = negativeCorrection, correctOnlyIfSignificant = correctOnlyIfSignificant, 
+    ListResults = MultiMAM(frame = frame, modelType = modelType,
+        negativeCorrection = negativeCorrection, correctOnlyIfSignificant = correctOnlyIfSignificant,
         limitOfSignificance = limitOfSignificance, plotReg = FALSE)
     if (modelType == "overall") {
-        ListResultsMAMmultivariate = MultiMAM(frame = frame, 
-            modelType = "mam", negativeCorrection = negativeCorrection, 
-            correctOnlyIfSignificant = correctOnlyIfSignificant, 
+        ListResultsMAMmultivariate = MultiMAM(frame = frame,
+            modelType = "mam", negativeCorrection = negativeCorrection,
+            correctOnlyIfSignificant = correctOnlyIfSignificant,
             limitOfSignificance = limitOfSignificance, plotReg = FALSE)
         UsualBeta = ListResultsMAMmultivariate$Beta
         CorrectedBeta = apply(UsualBeta, 2, "/", ListResults$Beta)
@@ -51,7 +53,7 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
     matriceInter = ListResults$intMat
     scalPval = ListResults$pvalScal
     nNeg = ListResults$nNeg
-    PanelProd = nrep * nass * t(scale(matriceProd, scale = FALSE)) %*% 
+    PanelProd = nrep * nass * t(scale(matriceProd, scale = FALSE)) %*%
         scale(matriceProd, scale = FALSE)
     PanelScal = nrep * t(matriceScaling) %*% matriceScaling
     PanelDisag = nrep * t(matriceDisag) %*% matriceDisag
@@ -66,13 +68,13 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
     if (modelType == "mam") {
         if (negativeCorrection) {
             if (correctOnlyIfSignificant) {
-                scalingDisc = sum(scalPval < limitOfSignificance, 
+                scalingDisc = sum(scalPval < limitOfSignificance,
                   na.rm = TRUE)
-                disagDF = (scalingDisc/natt) * ((nprod - 2) * 
-                  (nass - 1) + mean(nNeg[scalingDisc], na.rm = TRUE)) + 
-                  (1 - scalingDisc/natt) * (nprod - 1) * (nass - 
+                disagDF = (scalingDisc/natt) * ((nprod - 2) *
+                  (nass - 1) + mean(nNeg[scalingDisc], na.rm = TRUE)) +
+                  (1 - scalingDisc/natt) * (nprod - 1) * (nass -
                     1)
-                scalingDF = (scalingDisc/natt) * ((nass - 1) - 
+                scalingDF = (scalingDisc/natt) * ((nass - 1) -
                   mean(nNeg[scalingDisc], na.rm = TRUE))
             }
             else {
@@ -82,10 +84,10 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         }
         else {
             if (correctOnlyIfSignificant) {
-                scalingDisc = sum(scalPval < limitOfSignificance, 
+                scalingDisc = sum(scalPval < limitOfSignificance,
                   na.rm = TRUE)
-                disagDF = (scalingDisc/natt) * ((nprod - 2) * 
-                  (nass - 1)) + (1 - scalingDisc/natt) * (nprod - 
+                disagDF = (scalingDisc/natt) * ((nprod - 2) *
+                  (nass - 1)) + (1 - scalingDisc/natt) * (nprod -
                   1) * (nass - 1)
                 scalingDF = (scalingDisc/natt) * (nass - 1)
             }
@@ -95,41 +97,41 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
             }
         }
     }
-    multiPanelDiscrimination = Manova(P = PanelProd, R = PanelDisag, 
+    multiPanelDiscrimination = Manova(P = PanelProd, R = PanelDisag,
         disagDF, test = manovaTest)
-    multiPanelDisagreement = Manova(P = PanelDisag, R = PanelError, 
+    multiPanelDisagreement = Manova(P = PanelDisag, R = PanelError,
         nass * nprod * (nrep - 1), test = manovaTest)
-    multiPanelScaling = Manova(PanelScal, PanelDisag, disagDF, 
+    multiPanelScaling = Manova(PanelScal, PanelDisag, disagDF,
         test = manovaTest)
     if (modelType == "mam" || modelType == "overall") {
         multiPanelPerformances = matrix(NA, 4, 3)
-        rownames(multiPanelPerformances) = c("discrimination", 
+        rownames(multiPanelPerformances) = c("discrimination",
             "scaling", "agreement", "repeatability")
     }
     if (modelType == "classic") {
         multiPanelPerformances = matrix(NA, 3, 3)
-        rownames(multiPanelPerformances) = c("discrimination", 
+        rownames(multiPanelPerformances) = c("discrimination",
             "agreement", "repeatability")
     }
     colnames(multiPanelPerformances) = c("stat", "f", "pvalue")
-    multiPanelPerformances["discrimination", "f"] = round(Re(multiPanelDiscrimination$f), 
+    multiPanelPerformances["discrimination", "f"] = round(Re(multiPanelDiscrimination$f),
         digits = 3)
-    multiPanelPerformances["discrimination", "stat"] = round(Re(multiPanelDiscrimination$stat), 
+    multiPanelPerformances["discrimination", "stat"] = round(Re(multiPanelDiscrimination$stat),
         digits = 3)
-    multiPanelPerformances["discrimination", "pvalue"] = round(Re(multiPanelDiscrimination$pvalue), 
+    multiPanelPerformances["discrimination", "pvalue"] = round(Re(multiPanelDiscrimination$pvalue),
         digits = 4)
-    multiPanelPerformances["agreement", "stat"] = round(Re(multiPanelDisagreement$stat), 
+    multiPanelPerformances["agreement", "stat"] = round(Re(multiPanelDisagreement$stat),
         digits = 3)
-    multiPanelPerformances["agreement", "f"] = round(Re(multiPanelDisagreement$f), 
+    multiPanelPerformances["agreement", "f"] = round(Re(multiPanelDisagreement$f),
         digits = 3)
-    multiPanelPerformances["agreement", "pvalue"] = round(Re(multiPanelDisagreement$pvalue), 
+    multiPanelPerformances["agreement", "pvalue"] = round(Re(multiPanelDisagreement$pvalue),
         digits = 4)
     if (modelType == "mam" || modelType == "overall") {
-        multiPanelPerformances["scaling", "stat"] = round(Re(multiPanelScaling$stat), 
+        multiPanelPerformances["scaling", "stat"] = round(Re(multiPanelScaling$stat),
             digits = 3)
-        multiPanelPerformances["scaling", "f"] = round(Re(multiPanelScaling$f), 
+        multiPanelPerformances["scaling", "f"] = round(Re(multiPanelScaling$f),
             digits = 3)
-        multiPanelPerformances["scaling", "pvalue"] = round(Re(multiPanelScaling$pvalue), 
+        multiPanelPerformances["scaling", "pvalue"] = round(Re(multiPanelScaling$pvalue),
             digits = 4)
     }
     avgPanel = rep(NA, natt)
@@ -181,15 +183,15 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
     multiLevelPanel = mean(decomposition[, "X.mean"], na.rm = TRUE)
     listAnova = list()
     for (d in 1:natt) {
-        decompositionByDescr = decomposition[decomposition[, 
+        decompositionByDescr = decomposition[decomposition[,
             "Attribute"] == attnames[d], ]
-        SSprod = t(decompositionByDescr[, "prodEffect"]) %*% 
+        SSprod = t(decompositionByDescr[, "prodEffect"]) %*%
             decompositionByDescr[, "prodEffect"]
         DFprod = nprod - 1
-        SSsuj = t(decompositionByDescr[, "sujEffect"]) %*% decompositionByDescr[, 
+        SSsuj = t(decompositionByDescr[, "sujEffect"]) %*% decompositionByDescr[,
             "sujEffect"]
         DFsuj = nass - 1
-        SSscal = t(decompositionByDescr[, "Scaling"]) %*% decompositionByDescr[, 
+        SSscal = t(decompositionByDescr[, "Scaling"]) %*% decompositionByDescr[,
             "Scaling"]
         if (negativeCorrection) {
             DFscal = nass - 1 - nNeg[d]
@@ -197,7 +199,7 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         else {
             DFscal = nass - 1
         }
-        SSdisag = t(decompositionByDescr[, "Disag"]) %*% decompositionByDescr[, 
+        SSdisag = t(decompositionByDescr[, "Disag"]) %*% decompositionByDescr[,
             "Disag"]
         if (modelType != "classic") {
             if (negativeCorrection) {
@@ -210,24 +212,24 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         else {
             DFdisag = (nprod - 1) * (nass - 1)
         }
-        SSerror = t(decompositionByDescr[, "err"]) %*% decompositionByDescr[, 
+        SSerror = t(decompositionByDescr[, "err"]) %*% decompositionByDescr[,
             "err"]
         DFerror = nprod * nass * (nrep - 1)
-        avgPanel[d] = mean(decompositionByDescr[, "X.mean"], 
+        avgPanel[d] = mean(decompositionByDescr[, "X.mean"],
             na.rm = TRUE)
         FdiscrPanel[d] = (SSprod/DFprod)/(SSdisag/DFdisag)
-        PdiscrPanel[d] = pf(FdiscrPanel[d], DFprod, DFdisag, 
+        PdiscrPanel[d] = pf(FdiscrPanel[d], DFprod, DFdisag,
             lower.tail = FALSE)
         FscalPanel[d] = (SSscal/DFscal)/(SSdisag/DFdisag)
         PscalPanel[d] = pf(FscalPanel[d], DFscal, DFdisag, lower.tail = FALSE)
         FdisagPanel[d] = (SSdisag/DFdisag)/(SSerror/DFerror)
-        PdisagPanel[d] = pf(FdisagPanel[d], DFdisag, DFerror, 
+        PdisagPanel[d] = pf(FdisagPanel[d], DFdisag, DFerror,
             lower.tail = FALSE)
         PerrPanel[d] = sqrt(SSerror/DFerror)
         listAnova[[attnames[d]]] = matrix(NA, 5, 5)
-        rownames(listAnova[[attnames[d]]]) = c("Product", "Subject", 
+        rownames(listAnova[[attnames[d]]]) = c("Product", "Subject",
             "Scaling", "Disag", "Residuals")
-        colnames(listAnova[[attnames[d]]]) = c("DF", "SS", "MS", 
+        colnames(listAnova[[attnames[d]]]) = c("DF", "SS", "MS",
             "F", "P-value")
         listAnova[[attnames[d]]]["Product", "DF"] = DFprod
         listAnova[[attnames[d]]]["Product", "SS"] = SSprod
@@ -238,7 +240,7 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         listAnova[[attnames[d]]]["Subject", "SS"] = SSsuj
         listAnova[[attnames[d]]]["Subject", "MS"] = SSsuj/DFsuj
         listAnova[[attnames[d]]]["Subject", "F"] = (SSsuj/DFsuj)/(SSdisag/DFdisag)
-        listAnova[[attnames[d]]]["Subject", "P-value"] = pf(listAnova[[d]]["Subject", 
+        listAnova[[attnames[d]]]["Subject", "P-value"] = pf(listAnova[[d]]["Subject",
             "F"], df1 = DFsuj, df2 = DFdisag, lower.tail = FALSE)
         listAnova[[attnames[d]]]["Scaling", "DF"] = DFscal
         listAnova[[attnames[d]]]["Scaling", "SS"] = SSscal
@@ -255,56 +257,56 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         listAnova[[attnames[d]]]["Residuals", "MS"] = SSerror/DFerror
         if (modelType == "overall") {
             decompositionM = ListResultsMAMmultivariate$decomposition
-            decompositionByDescrM = decompositionM[decompositionM[, 
+            decompositionByDescrM = decompositionM[decompositionM[,
                 "Attribute"] == attnames[d], ]
         }
         if (panelistPerf) {
             for (i in 1:nass) {
-                decompositionByDescrAndSuj = decompositionByDescr[decompositionByDescr[, 
+                decompositionByDescrAndSuj = decompositionByDescr[decompositionByDescr[,
                   "ass"] == assnames[i], ]
-                effetProdInd = (decompositionByDescrAndSuj[, 
-                  "prodEffect"] + decompositionByDescrAndSuj[, 
+                effetProdInd = (decompositionByDescrAndSuj[,
+                  "prodEffect"] + decompositionByDescrAndSuj[,
                   "int"])
                 SSprodi = t(effetProdInd) %*% effetProdInd
                 DFprodi = nprod - 1
-                levelPanelist[d, i] = mean(decompositionByDescrAndSuj[, 
+                levelPanelist[d, i] = mean(decompositionByDescrAndSuj[,
                   "X.mean"]) - avgPanel[d]
                 if (modelType != "classic") {
-                  SSscali = t(decompositionByDescrAndSuj[, "Scaling"]) %*% 
+                  SSscali = t(decompositionByDescrAndSuj[, "Scaling"]) %*%
                     decompositionByDescrAndSuj[, "Scaling"]
                   DFscali = 1
                 }
-                SSdisagi = t(decompositionByDescrAndSuj[, "Disag"]) %*% 
+                SSdisagi = t(decompositionByDescrAndSuj[, "Disag"]) %*%
                   decompositionByDescrAndSuj[, "Disag"]
                 DFdisagi = nprod - 2
                 if (decompositionByDescrAndSuj[1, "Beta"] < 0) {
                   DFdisagi = nprod - 1
                 }
-                if (correctOnlyIfSignificant & (scalPval[d] > 
+                if (correctOnlyIfSignificant & (scalPval[d] >
                   limitOfSignificance)) {
                   DFdisagi = nprod - 1
                 }
                 if (nrep > 1) {
-                  SSerrori = t(decompositionByDescrAndSuj[, "err"]) %*% 
+                  SSerrori = t(decompositionByDescrAndSuj[, "err"]) %*%
                     decompositionByDescrAndSuj[, "err"]
                   DFerrori = nprod * (nrep - 1)
                   FdiscrPanelist[d, i] = (SSprodi/DFprodi)/(SSerrori/DFerrori)
-                  PdiscrPanelist[d, i] = pf(FdiscrPanelist[d, 
+                  PdiscrPanelist[d, i] = pf(FdiscrPanelist[d,
                     i], DFprodi, DFerrori, lower.tail = FALSE)
                   if (modelType != "classic") {
                     FscalPanelist[d, i] = (SSscali/DFscali)/(SSdisagi/DFdisagi)
-                    PscalPanelist[d, i] = pf(FscalPanelist[d, 
+                    PscalPanelist[d, i] = pf(FscalPanelist[d,
                       i], DFscali, DFdisagi, lower.tail = FALSE)
                   }
                   FerrorPanelist[d, i] = (SSerrori/DFerrori)
-                  FerrorTMP = (SSerrori/(nprod * (nrep - 1)))/((SSerror - 
+                  FerrorTMP = (SSerrori/(nprod * (nrep - 1)))/((SSerror -
                     SSerrori)/((nass - 1) * nprod * (nrep - 1)))
-                  PerrorPanelist[d, i] = pf(FerrorTMP, df1 = nprod * 
-                    (nrep - 1), df2 = nprod * (nrep - 1) * (nass - 
+                  PerrorPanelist[d, i] = pf(FerrorTMP, df1 = nprod *
+                    (nrep - 1), df2 = nprod * (nrep - 1) * (nass -
                     1), lower.tail = FALSE)
                 }
                 if (nrep == 1) {
-                  SSerrori = t(decompositionByDescrAndSuj[, "int"]) %*% 
+                  SSerrori = t(decompositionByDescrAndSuj[, "int"]) %*%
                     decompositionByDescrAndSuj[, "int"]
                   DFerrori = nprod - 1
                   FdiscrPanelist[d, i] = NA
@@ -317,65 +319,65 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
                   PerrorPanelist[d, i] = NA
                 }
                 if (modelType == "overall") {
-                  decompositionByDescrAndSujM = decompositionByDescrM[decompositionByDescrM[, 
+                  decompositionByDescrAndSujM = decompositionByDescrM[decompositionByDescrM[,
                     "ass"] == assnames[i], ]
                   if (modelType != "classic") {
-                    SSscali = t(decompositionByDescrAndSujM[, 
-                      "Scaling"]) %*% decompositionByDescrAndSujM[, 
+                    SSscali = t(decompositionByDescrAndSujM[,
+                      "Scaling"]) %*% decompositionByDescrAndSujM[,
                       "Scaling"]
                     DFscali = 1
                   }
-                  SSdisagi = t(decompositionByDescrAndSujM[, 
-                    "Disag"]) %*% decompositionByDescrAndSujM[, 
+                  SSdisagi = t(decompositionByDescrAndSujM[,
+                    "Disag"]) %*% decompositionByDescrAndSujM[,
                     "Disag"]
                   DFdisagi = nprod - 2
                   if (modelType != "classic") {
                     FscalPanelist[d, i] = (SSscali/DFscali)/(SSdisagi/DFdisagi)
-                    PscalPanelist[d, i] = pf(FscalPanelist[d, 
+                    PscalPanelist[d, i] = pf(FscalPanelist[d,
                       i], DFscali, DFdisagi, lower.tail = FALSE)
                   }
                 }
                 if (correlationTest == "none") {
                   FdisagPanelist[d, i] = (SSdisagi/DFdisagi)/(SSerrori/DFerrori)
-                  PdisagPanelist[d, i] = pf(FdisagPanelist[d, 
+                  PdisagPanelist[d, i] = pf(FdisagPanelist[d,
                     i], DFdisagi, DFerrori, lower.tail = FALSE)
                 }
                 if (correlationTest != "none") {
-                  if (!correlationTest %in% c("kendall", "pearson", 
+                  if (!correlationTest %in% c("kendall", "pearson",
                     "spearman")) {
                     stop("correlationTest should be 'none','kendall','spearman' or 'pearson'")
                   }
                   moyennePanelist = rep(NA, nprod)
                   moyenneRestPanel = rep(NA, nprod)
                   for (z in 1:nprod) {
-                    moyennePanelist[z] = mean(decompositionByDescr[decompositionByDescr[, 
-                      "ass"] == assnames[i] & decompositionByDescr[, 
+                    moyennePanelist[z] = mean(decompositionByDescr[decompositionByDescr[,
+                      "ass"] == assnames[i] & decompositionByDescr[,
                       "prod"] == prodnames[z], "X.mean"], na.rm = TRUE)
-                    moyenneRestPanel[z] = mean(decompositionByDescr[decompositionByDescr[, 
-                      "ass"] != assnames[i] & decompositionByDescr[, 
+                    moyenneRestPanel[z] = mean(decompositionByDescr[decompositionByDescr[,
+                      "ass"] != assnames[i] & decompositionByDescr[,
                       "prod"] == prodnames[z], "X.mean"], na.rm = TRUE)
                   }
-                  corTest = cor.test(moyennePanelist, moyenneRestPanel, 
+                  corTest = cor.test(moyennePanelist, moyenneRestPanel,
                     method = correlationTest, alternative = "greater")
                   FdisagPanelist[d, i] = corTest$estimate
                   PdisagPanelist[d, i] = corTest$p.value
                 }
             }
         }
-        listPanelistPerf = list(levelPanelist, FdiscrPanelist, 
-            PdiscrPanelist, FscalPanelist, PscalPanelist, FdisagPanelist, 
+        listPanelistPerf = list(levelPanelist, FdiscrPanelist,
+            PdiscrPanelist, FscalPanelist, PscalPanelist, FdisagPanelist,
             PdisagPanelist, FerrorPanelist, PerrorPanelist)
-        names(listPanelistPerf) = c("avg", "Fdiscr", "Pdiscr", 
-            "Fscal", "Pscal", "Fdisag", "Pdisag", "MSError", 
+        names(listPanelistPerf) = c("avg", "Fdiscr", "Pdiscr",
+            "Fscal", "Pscal", "Fdisag", "Pdisag", "MSError",
             "Perror")
     }
-    listPanelPerf = list(avgPanel, FdiscrPanel, PdiscrPanel, 
+    listPanelPerf = list(avgPanel, FdiscrPanel, PdiscrPanel,
         FscalPanel, PscalPanel, FdisagPanel, PdisagPanel, PerrPanel)
-    names(listPanelPerf) = c("avg", "Fdiscr", "Pdiscr", "Fscal", 
+    names(listPanelPerf) = c("avg", "Fdiscr", "Pdiscr", "Fscal",
         "Pscal", "Fdisag", "Pdisag", "SRMSError")
-    L = list(multiPanelPerformances, ListResults$decomposition, 
+    L = list(multiPanelPerformances, ListResults$decomposition,
         PanelDisag, listPanelPerf, listAnova)
-    names(L) = c("multiPanelPerformances", "decomposition", "matW", 
+    names(L) = c("multiPanelPerformances", "decomposition", "matW",
         "listPanelPerf", "listAnova")
     if (modelType == "overall" || modelType == "mam") {
         L[["Beta"]] = t(scalingCoefficient)

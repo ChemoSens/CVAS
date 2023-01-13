@@ -1,0 +1,2 @@
+library(CVAS)
+data(cheeses)

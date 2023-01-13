@@ -1,9 +1,13 @@
+#' @importFrom doBy orderBy summaryBy
+#' @importFrom stats lm anova lm pf
+#'@importFrom grDevices rainbow
+#'@importFrom graphics plot.new points abline
 MultiMAM <-
-function (frame, modelType = "overall", negativeCorrection = TRUE, 
-    correctOnlyIfSignificant = FALSE, limitOfSignificance = 0.05, 
-    plotReg = FALSE) 
+function (frame, modelType = "overall", negativeCorrection = TRUE,
+    correctOnlyIfSignificant = FALSE, limitOfSignificance = 0.05,
+    plotReg = FALSE)
 {
-    LoadPackage("doBy")
+
     attnames = labels(frame)[[2]][-1:-3]
     natt = length(attnames)
     ass = factor(as.character(frame[, 1]))
@@ -74,16 +78,16 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
             X = frame[, p]
             mu = mean(X)
             frame$X = X
-            xam = orderBy(~ass, data = data.frame(summaryBy(X ~ 
+            xam = orderBy(~ass, data = data.frame(summaryBy(X ~
                 ass, data = frame)))
-            xpm = orderBy(~prod, data = data.frame(summaryBy(X ~ 
+            xpm = orderBy(~prod, data = data.frame(summaryBy(X ~
                 prod, data = frame)))
-            xapm = orderBy(~ass + prod, data = data.frame(summaryBy(X ~ 
+            xapm = orderBy(~ass + prod, data = data.frame(summaryBy(X ~
                 ass + prod, data = frame)))
             frame = frame[, which(colnames(frame) != "X")]
-            xapm$int = xapm$X.mean - rep(xam$X.mean, rep(nprod, 
+            xapm$int = xapm$X.mean - rep(xam$X.mean, rep(nprod,
                 nass)) - rep(xpm$X.mean, nass) + mu
-            xapm$xsuj = xapm$X.mean - rep(xam$X.mean, rep(nprod, 
+            xapm$xsuj = xapm$X.mean - rep(xam$X.mean, rep(nprod,
                 nass))
             xapm$xs = rep(xpm$X.mean, nass) - mu
             matriceXS[, p - 3] = xapm[, "xs"]
@@ -91,24 +95,24 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
             matriceXSInt[, p - 3] = xapm[, "int"]
         }
         for (i in 1:nass) {
-            linearRegression = lm(as.vector(matriceXSInt[xapm[, 
-                "ass"] == asslevels[i], ]) ~ as.vector(matriceXS[xapm[, 
+            linearRegression = lm(as.vector(matriceXSInt[xapm[,
+                "ass"] == asslevels[i], ]) ~ as.vector(matriceXS[xapm[,
                 "ass"] == asslevels[i], ]))
             coeff = linearRegression$coefficients
             summaryResults = summary(linearRegression)
             if (plotReg) {
-                x11()
+                dev.new()
                 plot.new()
-                xpts = as.vector(matriceXS[xapm[, "ass"] == asslevels[i], 
+                xpts = as.vector(matriceXS[xapm[, "ass"] == asslevels[i],
                   ])
-                ypts = as.vector(matrice2[xapm[, "ass"] == asslevels[i], 
+                ypts = as.vector(matrice2[xapm[, "ass"] == asslevels[i],
                   ])
                 colorpts = as.vector(rep(rainbow(natt), each = nprod))
-                plot(0, 0, xlab = "Centered panel scores", ylab = "Centered panelist scores", 
-                  main = paste("Regression for individual beta \n (", 
-                    asslevels[i], ": beta =", round(coeff[2] + 
-                      1, digits = 3), ")"), xlim = c(min(xpts, 
-                    ypts) - 0.05, max(xpts, ypts) + 0.05), ylim = c(-0.05 + 
+                plot(0, 0, xlab = "Centered panel scores", ylab = "Centered panelist scores",
+                  main = paste("Regression for individual beta \n (",
+                    asslevels[i], ": beta =", round(coeff[2] +
+                      1, digits = 3), ")"), xlim = c(min(xpts,
+                    ypts) - 0.05, max(xpts, ypts) + 0.05), ylim = c(-0.05 +
                     min(ypts, xpts), 0.05 + max(xpts, ypts)))
                 points(xpts, ypts, col = colorpts, pch = 16)
                 abline(a = coeff[1], b = coeff[2] + 1, col = "red")
@@ -131,20 +135,20 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         mu = mean(X)
         averages[p - 3] = mu
         frame$X = X
-        xam = orderBy(~ass, data = data.frame(summaryBy(X ~ ass, 
+        xam = orderBy(~ass, data = data.frame(summaryBy(X ~ ass,
             data = frame)))
-        xpm = orderBy(~prod, data = data.frame(summaryBy(X ~ 
+        xpm = orderBy(~prod, data = data.frame(summaryBy(X ~
             prod, data = frame)))
-        xapm = orderBy(~ass + prod, data = data.frame(summaryBy(X ~ 
+        xapm = orderBy(~ass + prod, data = data.frame(summaryBy(X ~
             ass + prod, data = frame)))
-        xaprm = orderBy(~ass + prod + rep, data = data.frame(summaryBy(X ~ 
+        xaprm = orderBy(~ass + prod + rep, data = data.frame(summaryBy(X ~
             rep + ass + prod, data = frame)))
         frame = frame[, which(colnames(frame) != "X")]
-        xapm$int = xapm$X.mean - rep(xam$X.mean, rep(nprod, nass)) - 
+        xapm$int = xapm$X.mean - rep(xam$X.mean, rep(nprod, nass)) -
             rep(xpm$X.mean, nass) + mu
         xapm$prodEffect = rep(xpm$X.mean, nass) - mu
         xam$sujEffect = xam$X.mean - mu
-        xapm$sujEffect = rep(xam$X.mean, rep(nprod, nass)) - 
+        xapm$sujEffect = rep(xam$X.mean, rep(nprod, nass)) -
             mu
         xapm$xs = rep(xpm$X.mean, nass)
         xaprm$mu = mu
@@ -152,13 +156,13 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         xaprm$sujEffect = rep(xapm$sujEffect, each = nrep)
         xaprm$prodEffect = rep(xapm$prodEffect, each = nrep)
         xaprm$int = rep(xapm$int, each = nrep)
-        xaprm$err = xaprm$centeredMean - xaprm$sujEffect - xaprm$prodEffect - 
+        xaprm$err = xaprm$centeredMean - xaprm$sujEffect - xaprm$prodEffect -
             xaprm$int
         nnegatives[p - 3] = 0
         for (i in 1:nass) {
             if (modelType == "mam") {
                 subsetData = subset(xapm, ass == asslevels[i])
-                res = lm(int ~ xs, data = subset(xapm, ass == 
+                res = lm(int ~ xs, data = subset(xapm, ass ==
                   asslevels[i]))
                 aovres = anova(res)[, 2]
                 Beta[i] = res$coef[2]
@@ -186,14 +190,14 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
             }
             xapm[xapm[, "ass"] == asslevels[i], "Beta"] = BetaToUse[i]
         }
-        xapm[, "disag"] = xapm[, "int"] - xapm[, "Beta"] * (xapm[, 
+        xapm[, "disag"] = xapm[, "int"] - xapm[, "Beta"] * (xapm[,
             "xs"] - mu)
         xapm$scaling = xapm[, "Beta"] * (xapm[, "xs"] - mu)
         xapm[, "sujmean"] = rep(xam$X.mean, each = nprod)
         if (correctOnlyIfSignificant & modelType != "classic") {
             SSScal = nrep * t(xapm[, "scaling"]) %*% xapm[, "scaling"]
             SSDisag = nrep * t(xapm[, "disag"]) %*% xapm[, "disag"]
-            SSAss = nrep * nprod * t(xam[, "sujEffect"]) %*% 
+            SSAss = nrep * nprod * t(xam[, "sujEffect"]) %*%
                 xam[, "sujEffect"]
             dfScal = (nass - 1)
             dfDisag = (nass - 1) * (nprod - 2)
@@ -202,9 +206,9 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
             xapm[, "disag"] = xapm[, "int"]
             xapm[, "scaling"] = 0
             if (pScaling[p - 3] < limitOfSignificance) {
-                xapm[, "disag"] = xapm[, "int"] - xapm[, "Beta"] * 
+                xapm[, "disag"] = xapm[, "int"] - xapm[, "Beta"] *
                   (xapm[, "xs"] - mu)
-                xapm$scaling = xapm[, "Beta"] * (xapm[, "xs"] - 
+                xapm$scaling = xapm[, "Beta"] * (xapm[, "xs"] -
                   mu)
             }
         }
@@ -213,7 +217,7 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         xaprm$Beta = rep(xapm$Beta, each = nrep)
         xaprm$Scaling = rep(xapm[, "scaling"], each = nrep)
         xaprm$Disag = rep(xapm[, "disag"], each = nrep)
-        matriceScaling[, p - 3] = xapm[, "Beta"] * (xapm[, "xs"] - 
+        matriceScaling[, p - 3] = xapm[, "Beta"] * (xapm[, "xs"] -
             mu)
         matriceDisag[, p - 3] = xapm[, "disag"]
         matriceBeta[, p - 3] = Beta
@@ -226,7 +230,7 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
         xaprm2 = xaprm
         xaprm2[, "Beta"] = xaprm2[, "Beta"] + 1
         xaprm2[, "Attribute"] = attnames[p - 3]
-        decompositionDataFrame = rbind(decompositionDataFrame, 
+        decompositionDataFrame = rbind(decompositionDataFrame,
             xaprm2)
     }
     rownames(matriceProd) = xpm[, 1]
@@ -234,7 +238,7 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
     rownames(matriceScaling) = paste(xapm[, 1], xapm[, 2], sep = "_")
     rownames(matriceDisag) = paste(xapm[, 1], xapm[, 2], sep = "_")
     rownames(matriceInter) = paste(xapm[, 1], xapm[, 2], sep = "_")
-    rownames(matriceError) = paste(xaprm[, 1], xaprm[, 2], xaprm[, 
+    rownames(matriceError) = paste(xaprm[, 1], xaprm[, 2], xaprm[,
         3], sep = "_")
     if (modelType == "mam") {
         resultedBeta = matriceBeta + 1
@@ -245,11 +249,11 @@ function (frame, modelType = "overall", negativeCorrection = TRUE,
     if (modelType != "overall" & modelType != "mam") {
         resultedBeta = NULL
     }
-    L = list(decompositionDataFrame, resultedBeta, averages, 
-        matriceProd, matriceXSu, matriceScaling, matriceDisag, 
+    L = list(decompositionDataFrame, resultedBeta, averages,
+        matriceProd, matriceXSu, matriceScaling, matriceDisag,
         matriceError, matriceInter, nnegatives, pScaling, modelType)
-    names(L) = c("decomposition", "Beta", "avgMat", "prodMat", 
-        "subjMat", "scalMat", "disagMat", "errMat", "intMat", 
+    names(L) = c("decomposition", "Beta", "avgMat", "prodMat",
+        "subjMat", "scalMat", "disagMat", "errMat", "intMat",
         "nNeg", "pvalScal", "modelType")
     return(L)
 }

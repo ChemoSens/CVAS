@@ -1,9 +1,12 @@
 Package: CVAS
 Type: Package
-Title: What the package does (short line)
+Title: Runs CVAS
 Version: 1.0
-Date: 2014-11-03
+Date: 2023-01-13
 Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
+Maintainer: Who to complain to <caroline.peltier@inrae.fr>
 Description: More about what it does (maybe more than one line)
-License: What license is it under?
+License: GPL-3
+Encoding: UTF-8
+Imports: ellipse, doBy, stats, utils
+RoxygenNote: 7.1.2
