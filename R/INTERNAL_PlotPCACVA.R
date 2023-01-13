@@ -8,10 +8,11 @@
 #'@param variablesColors vector of colors for variables
 #'@param individualsColors vector of colors for variables
 #'@param suppIndividualsColors vector of colors for supplementary individuals
-#'@param individualLabels TRUE  if to be displayed, FALSE otherwise
-#'@param suppIndividualLabels TRUE  if to be displayed, FALSE otherwise
+#'@param individualsLabels TRUE  if to be displayed, FALSE otherwise
+#'@param suppIndividualsLabels TRUE  if to be displayed, FALSE otherwise
+#'@param variablesLabels TRUE  if to be displayed, FALSE otherwise
 #'@param individualsEllipses array containing ellipses coordinates
-#'@param individualsSegment TRUE or FALSE
+#'@param individualsSegments TRUE or FALSE
 #'@param xlab label for x axis
 #'@param ylab label for y axis
 #'@param expand useful for biplot. Number indicating how to expand the graph
@@ -24,8 +25,6 @@
 #'@param xlim vector of two numbers indicating the limits of x axis
 #'@param ylim vector of two numbers indicating the limits of y axis
 #'confInt   limit for the confidence ellipses. By default 0.9
-#'@param ellipsesType "barycentric" or "individual". Barycentric if an ellipse represents a zone of confidence where the mean point is (with a probability of confInt),
-#'  "individual" if an ellipse represents a zone where the subject scores are (with a probability of confInt)
 #' @export
 INTERNAL_PlotPCACVA <-function (variables, individuals, suppIndividualsToPlot = FALSE,
     suppIndividuals = NULL, biplot = TRUE, variablesColors = NULL,

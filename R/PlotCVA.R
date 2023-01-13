@@ -16,18 +16,18 @@
 #'@param ellipsesCalculation "Chi", "F" or "Sas"
 #'@param ellipsesByRep F or T. False by default, TRUE is an option that should not be selected (for internal use only)
 #'@param cex size of the text, default 0.8
+#'@param suppIndividualsToPlot FALSE by default (for internal use)
 #' @seealso{
 #'  \code{\link{CVA}}
 #'}
 #' @examples{
 #' data(cheeses)
 #'  resCVA=CVA(cheeses,representation="biplot",productName="ProductCode",
-#'  subjectName="SubjectCode",replicateName="Replicate")
+#'  subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 #'  PlotCVA(resCVA)
 #'  resCVA=CVA(cheeses,representation="twoMaps",productName="ProductCode",
-#'  subjectName="SubjectCode",replicateName="Replicate")
-#'  PlotCVA(resCVA)
-#'}
+#'  subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+#'  PlotCVA(resCVA)}
 #' @importFrom utils combn
 #' @export
 PlotCVA <-

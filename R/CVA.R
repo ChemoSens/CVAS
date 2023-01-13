@@ -85,9 +85,10 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
     if (!replicateName %in% colnames(data)) {
         stop("replicateName is not in the colnames of data")
     }
-    if (!representation %in% c("biplot", "TwoMaps")) {
-        stop("representation should be 'biplot' or 'TwoMaps'")
+    if (!representation %in% c("biplot", "TwoMaps","twoMaps")) {
+        stop("representation should be 'biplot' or 'twoMaps'")
     }
+    if(representation=="twoMaps"){representation="TwoMaps"}
     if (!test %in% c("Hotelling-Lawley", "Wilks", "Pillai", "Roy")) {
         stop("test should be 'Hotelling-Lawley','Roy','Wilks' or 'Pillai'.")
     }

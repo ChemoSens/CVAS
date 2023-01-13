@@ -4,7 +4,7 @@
 \title{
 cheeses
 }
-
+\description{A dataset of sensory profile of cheeses with 288 observations on the following 16 variables.}
 \usage{data(cheeses)}
 \format{
   A data frame with 288 observations on the following 16 variables.

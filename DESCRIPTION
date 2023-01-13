@@ -5,7 +5,7 @@ Version: 1.0
 Date: 2023-01-13
 Author: Who wrote it
 Maintainer: Who to complain to <caroline.peltier@inrae.fr>
-Description: More about what it does (maybe more than one line)
+Description: This package allows Canonical Variate Analysis to be computed.
 License: GPL-3
 Encoding: UTF-8
 Imports: ellipse, doBy, stats, utils

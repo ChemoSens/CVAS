@@ -48,7 +48,15 @@ INTERNAL_PlotPCACVA(
 
 \item{suppIndividualsColors}{vector of colors for supplementary individuals}
 
+\item{variablesLabels}{TRUE  if to be displayed, FALSE otherwise}
+
+\item{individualsLabels}{TRUE  if to be displayed, FALSE otherwise}
+
+\item{suppIndividualsLabels}{TRUE  if to be displayed, FALSE otherwise}
+
 \item{individualsEllipses}{array containing ellipses coordinates}
+
+\item{individualsSegments}{TRUE or FALSE}
 
 \item{xlab}{label for x axis}
 
@@ -72,15 +80,6 @@ INTERNAL_PlotPCACVA(
 
 \item{ylim}{vector of two numbers indicating the limits of y axis
 confInt   limit for the confidence ellipses. By default 0.9}
-
-\item{individualLabels}{TRUE  if to be displayed, FALSE otherwise}
-
-\item{suppIndividualLabels}{TRUE  if to be displayed, FALSE otherwise}
-
-\item{individualsSegment}{TRUE or FALSE}
-
-\item{ellipsesType}{"barycentric" or "individual". Barycentric if an ellipse represents a zone of confidence where the mean point is (with a probability of confInt),
-"individual" if an ellipse represents a zone where the subject scores are (with a probability of confInt)}
 }
 \description{
 INTERNAL_PlotPCACVA

@@ -40,6 +40,8 @@ PlotCVA(
 
 \item{linkBetweenProducts}{if TRUE, two products which were equal with Hotelling T2 test are linked by a segment. TRUE by default}
 
+\item{suppIndividualsToPlot}{FALSE by default (for internal use)}
+
 \item{type}{type of the output. "R" corresponds to a classical R-graph, whereas "png","jpg" and "wmf" create a file in the working directory.}
 
 \item{fileName}{name of the file containing the CVA in the working directory}
@@ -59,12 +61,11 @@ Plots a CVA graph
 {
 data(cheeses)
  resCVA=CVA(cheeses,representation="biplot",productName="ProductCode",
- subjectName="SubjectCode",replicateName="Replicate")
+ subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
  PlotCVA(resCVA)
  resCVA=CVA(cheeses,representation="twoMaps",productName="ProductCode",
- subjectName="SubjectCode",replicateName="Replicate")
- PlotCVA(resCVA)
-}
+ subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+ PlotCVA(resCVA)}
 }
 \seealso{
 {
