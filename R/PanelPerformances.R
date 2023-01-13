@@ -1,5 +1,9 @@
 #'@importFrom stats t.test cor.test pf
 #'@import doBy
+#'@export
+#' @param frame should be ordered as followed: subject, product, replicate
+#' @param modelType "overall", "tw",
+#' @
 PanelPerformances <-
 function (frame, modelType = "overall", negativeCorrection = TRUE,
     correctOnlyIfSignificant = FALSE, limitOfSignificance = 0.05,

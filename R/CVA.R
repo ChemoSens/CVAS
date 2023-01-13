@@ -73,7 +73,7 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
         }
         return(k - 1)
     }
-    if (!(option %in% c("ow", "tw", "mam", "overall", "tws"))) {
+    if (!(option %in% c("ow", "tw", "mam", "overall", "tws","1w"))) {
         stop("option does not exist. Please choose between 'tw' (Two-Way ANOVA),  'ow' (One-Way ANOVA), mam (for MAM model) or 'overall' (for the overall scaling)")
     }
     if (!productName %in% colnames(data)) {
@@ -109,14 +109,8 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
     if ((nbSubjects - 1) * (nbProducts - 1) < nbAttributes) {
         stop("Insufficient number of individuals")
     }
-    CenteredProductTable = data.frame(NULL)
-    CenteredProductTable = aggregate(data[, Attributes[1]], by = list(data[,
+    CenteredProductTable = aggregate(data[, Attributes], by = list(data[,
         productName]), FUN = "mean", na.rm = TRUE)
-    for (i in 2:length(Attributes)) {
-        CenteredProductTable[, Attributes[i]] = aggregate(data[,
-            Attributes[i]], by = list(data[, productName]), FUN = "mean",
-            na.rm = TRUE)[, 2]
-    }
     colnames(CenteredProductTable) = c(productName, Attributes)
     CenteredProductTable[, Attributes] = apply(CenteredProductTable[,
         Attributes], 2, "scale", center = TRUE, scale = FALSE)
@@ -124,15 +118,10 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
         Attributes])
     rownames(matrixOfCenteredProduct) = CenteredProductTable[,
         productName]
-    CenteredProductSubjectTable = data.frame(NULL)
-    CenteredProductSubjectTable = aggregate(data[, Attributes[1]],
+    CenteredProductSubjectTable = aggregate(data[, Attributes],
         by = list(data[, productName], data[, subjectName]),
         FUN = "mean", na.rm = TRUE)
-    for (i in 2:length(Attributes)) {
-        CenteredProductSubjectTable[, Attributes[i]] = aggregate(data[,
-            Attributes[i]], by = list(data[, productName], data[,
-            subjectName]), FUN = "mean", na.rm = TRUE)[, 3]
-    }
+
     colnames(CenteredProductSubjectTable) = c(productName, subjectName,
         Attributes)
     CenteredProductSubjectTable[, Attributes] = apply(CenteredProductSubjectTable[,
@@ -142,14 +131,8 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
     rownames(matrixOfCenteredProductSubject) = paste(CenteredProductSubjectTable[,
         productName], CenteredProductSubjectTable[, subjectName],
         sep = "")
-    CenteredSubjectTable = data.frame(NULL)
-    CenteredSubjectTable = aggregate(data[, Attributes[1]], by = list(data[,
+    CenteredSubjectTable = aggregate(data[, Attributes], by = list(data[,
         subjectName]), FUN = "mean", na.rm = TRUE)
-    for (i in 2:length(Attributes)) {
-        CenteredSubjectTable[, Attributes[i]] = aggregate(data[,
-            Attributes[i]], by = list(data[, subjectName]), FUN = "mean",
-            na.rm = TRUE)[, 2]
-    }
     colnames(CenteredSubjectTable) = c(subjectName, Attributes)
     CenteredSubjectTable[, Attributes] = apply(CenteredSubjectTable[,
         Attributes], 2, "scale", center = TRUE, scale = FALSE)
@@ -161,8 +144,28 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
     statTest = NULL
     statF = NULL
     statPval = NULL
+    if(option=="1w")
+    {
+      centeredData=scale(data[, Attributes],scale=F)
+      SSProd = nbSubjects *nbReplicates* t(matrixOfCenteredProduct) %*% matrixOfCenteredProduct
+      SSTotal = t(centeredData) %*% centeredData
+      SSres = SSTotal - SSProd
+      if (det(SSres) <= 2.2e-16) {
+        L = list()
+        L[[1]] = det(SSres)
+        names(L) = c("Det")
+        return(L)
+        stop("Non invertible matrix")
+      }
+      Y = as.matrix(centeredData)
+      Product = as.factor(data[, productName])
+      performances = summary(manova(lm(Y ~ Product)), test = test)$stats
+      statTest = performances[1, 2]
+      statF = performances[1, 3]
+      statPval = performances[1, 6]
+    }
     if (option == "ow") {
-        SSProd = t(matrixOfCenteredProduct) %*% matrixOfCenteredProduct
+        SSProd = nbSubjects * t(matrixOfCenteredProduct) %*% matrixOfCenteredProduct
         SSTotal = t(matrixOfCenteredProductSubject) %*% matrixOfCenteredProductSubject
         SSres = SSTotal - SSProd
         if (det(SSres) <= 2.2e-16) {
@@ -323,6 +326,7 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
     else if (is.numeric(nbAxes)) {
         nbAxes = min(nbAxes, min(nbProducts - 1, nbAttributes -
             1))
+        nbDimSig=NULL
     }
     normW = function(v, W) {
         return(sqrt(t(v) %*% W %*% v))
@@ -336,6 +340,8 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
     rownames(individuals) = rownames(matrixOfCenteredProduct)
     variables = cor(matrixOfCenteredProduct, individuals)
     biplot = FALSE
+
+
     if (representation == "biplot") {
         rootAndVap = function(matSymDefPos) {
             eig = eigen(matSymDefPos)
@@ -345,10 +351,8 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
         }
         wDemi = rootAndVap(SSres)
         yMat = matrixOfCenteredProduct %*% solve(wDemi)
-        individuals = matrix(NA, nbProducts, nbAxes)
-        rownames(individuals) = rownames(matrixOfCenteredProduct)
-        variables = matrix(NA, nbAttributes, nbAxes)
-        rownames(variables) = colnames(matrixOfCenteredProduct)
+        individuals = matrix(NA, nbProducts, nbAxes);  rownames(individuals) = rownames(matrixOfCenteredProduct)
+        variables = matrix(NA, nbAttributes, nbAxes);  rownames(variables) = colnames(matrixOfCenteredProduct)
         matsvd = svd(yMat)
         U = (matsvd$u)
         D = diag(matsvd$d)
