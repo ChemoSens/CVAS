@@ -1,5 +1,6 @@
 library(CVAS)
-library()
+library(MASS)
+library(testthat)
 data(cheeses)
 cheesesR1=cheeses[cheeses[,"Replicate"]=="R1",]
 tableProduct=aggregate(cheeses[,-c(1:4)],by=list(cheeses[,"ProductCode"]),FUN=mean)
@@ -26,8 +27,6 @@ rescva_ow$Stats
 resManova=manova(as.matrix(cheeses[,-c(1:4)])~cheeses[,"ProductCode"]+cheeses[,"SubjectCode"])
 summary(resManova,test="Wilks")
 rescva_tws$Stats
-
-rescva_ow$B
 
 
 # Comparison between cva 1w et lda

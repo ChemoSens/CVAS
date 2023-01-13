@@ -3,6 +3,7 @@
 export(CVA)
 export(INTERNAL_PlotPCACVA)
 export(PCA)
+export(PanelPerformances)
 export(PlotCVA)
 export(PlotPCA)
 import(doBy)
