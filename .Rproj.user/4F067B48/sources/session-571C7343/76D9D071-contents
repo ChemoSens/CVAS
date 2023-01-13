@@ -1,0 +1,208 @@
+getOptEnc=function(tds_df4,nbasis=6,ncores=6,norder=3,text=TRUE,colors=NULL,nBootstrap=50)
+{
+  basis <- create.bspline.basis(c(0, max(tds_df4[,"time"])), nbasis = nbasis, norder = norder)
+  fmca <- compute_optimal_encoding(tds_df4, basis, nCores = ncores,nBootstrap=nBootstrap)
+  p_comp=plotComponent(fmca,addNames=text)+geom_vline(xintercept=0,color="darkgrey")+geom_hline(yintercept=0,color="darkgrey")
+  p_eig=plotEigenvalues(fmca, cumulative = TRUE, normalize = TRUE)
+  p_harm1=plot(fmca,col=colors)
+  p_harm2=plot(fmca, harm=2,col=colors)
+  return(list(p=grid.arrange(p_comp+ggtitle("Individual map")+theme_bw(),p_eig+theme_bw(),p_harm1+theme_bw()+ggtitle("Harm. 1"),p_harm2+theme_bw()+ggtitle("Harm. 2")),fmca=fmca,basis=basis))
+}
+
+convertForCfda=function(tds=NULL,option="usualStd",endTime="max",tdsdf=NULL)
+{
+  if(!is.null(tds)){tds_df0=tds$df}
+  if(!is.null(tdsdf)){tds_df0=tdsdf}
+  tds_df0[,"descriptor"]=as.factor(as.character(tds_df0[,"descriptor"]))
+  tds_df2=tds_df0[,c("descriptor","start","sequenceDuration","stop","sequenceStop")]
+  colnames(tds_df2)=c("state","time","duration","stop","seqStop")
+  tds_df2[,"id"]=paste0(tds_df0[,"product"],tds_df0[,"subject"],tds_df0[,"rep"])
+  if(endTime=="max")
+  {
+    globalEnding=max(tds_df2[,"duration"],na.rm=T)
+  }
+  else(globalEnding=endTime)
+  indiv=levels(as.factor(tds_df2[,"id"]))
+  tds_df3=tds_df2
+  # Standardisation "violente"
+  res_tds=NULL
+  for(ind in indiv)
+  {
+    indiv_tds=tds_df2[tds_df2[,"id"]==ind,]
+    indiv_tds[,"state"]=as.character(indiv_tds[,"state"])
+    indiv_tds=rbind(indiv_tds,c("stop",indiv_tds[1,"seqStop"],indiv_tds[1,"duration"],indiv_tds[1,"seqStop"],indiv_tds[1,"seqStop"],ind))
+    indiv_tds[,"time"]=as.numeric(as.character(indiv_tds[,"time"]))
+    indiv_tds[,"duration"]=as.numeric(as.character(indiv_tds[,"time"]))
+    indiv_tds[,"stop"]=as.numeric(as.character(indiv_tds[,"time"]))
+    minim=min(indiv_tds[,"time"],na.rm=T)
+
+    if(option=="usualStd")
+    {
+      maxim=max(indiv_tds[,"time"],na.rm=T)
+      indiv_tds2=indiv_tds
+      if(minim!=maxim)
+      {
+        indiv_tds2[,"time"]=(indiv_tds[,"time"]-minim)/(maxim-minim)
+      }
+      if(minim==maxim)
+      {
+        print(ind)
+      }
+    }
+    if(option=="sameDurationMax")
+    {
+      indiv_tds2=as.data.frame(indiv_tds)
+      indiv_tds2[,"time"]=(indiv_tds[,"time"]-minim)
+      indiv_tds2=indiv_tds2[indiv_tds2[,"time"]<=globalEnding,]
+  #    if(indiv_tds[1,"duration"]!=globalEnding)
+  #    {
+        line_max=c("stop",globalEnding,0,globalEnding,globalEnding,ind)
+        indiv_tds2=rbind(indiv_tds2,line_max)
+  #      indiv_tds2[,"time"]=as.numeric(as.character(indiv_tds2[,"time"]))/globalEnding
+        indiv_tds2[,"time"]=as.numeric(as.character(indiv_tds2[,"time"]))
+
+  #    }
+    }
+
+    res_tds=rbind(res_tds, indiv_tds2[,c("state","time","id")])
+  }
+
+  res_tds=res_tds[order(res_tds[,"id"],res_tds[,"time"]),]
+# tds_df3[is.na(tds_df3[,"time"]),]=0
+#  tds_df3=tds_df3[!is.na(tds_df3[,"tim"]),]
+  return(res_tds)
+}
+
+trajectoiresPropres=function(enc_all,ncomp=2,vecteurPropre=reslda$scaling[,paste0("LD",harm)],nbPts=100,colors)
+{
+  fdlist=list()
+  #if(is.null(vecteurPropre)){vecteurPropre=rep(1,ncomp)}
+  for(i in 1:length(vecteurPropre))
+  {
+    alpha <- enc_all$fmca$alpha[[i]] # selection des alpha
+    alpha[is.na(alpha)]=0
+    fdObj <- fd(alpha, enc_all$fmca$basis)#utilisation de la fonction fd pour obtenir les fonctions propres
+    rangex <- fdObj$basis$rangeval
+    nBasis <- fdObj$basis$nbasis
+    fdlist[[i]] <- eval.fd(seq(0,1,length=nbPts), fdObj)*vecteurPropre[i] #utilisation de la fonction eval.fd pour avoir un nombre discret de points
+    if(i==1){matres=fdlist[[1]]}
+    if(i>1){matres=matres+fdlist[[i]]}
+  }
+  # On obtient une matrice avec 100 lignes nbAttributs colonnes (valable pour l'axe 1)
+  fdres=as.data.frame(matres);fdres[,"time"]=seq(0,1,length=100)
+  ggfdmat=reshape(fdres,direction="long",varying=list(colnames(matres)),times=colnames(matres),timevar="descriptor",v.names="score")
+  p_exp=ggplot(ggfdmat,aes(x=time,y=score,color=descriptor))+geom_line()+scale_color_manual(values=colors)+theme_bw()
+  listing=list(p_exp=p_exp,fdres=fdres,ggfdmat=ggfdmat)
+  return(listing)
+}
+
+
+plotHarm=function(enc_all,harm=1,colors,sizeLine="none",sizeVec=NULL,maxSize=4)
+{
+
+  if(sizeLine=="manual")
+  {
+    if(names(sizeVec)!=colnames(enc_all$fmca$alpha[[1]]))
+    {stop("size should have the same names as colnames alpha")}else
+    {
+      df_size=data.frame(descriptor=names(sizeVec),size=sizeVec)
+    }
+  }
+  if(sizeLine=="sum")
+  {
+    size=apply(enc_all$fmca$pt$pt,1,sum)/3
+    df_size=data.frame(descriptor=names(size),size=size)
+  }
+  if(sizeLine=="max")
+  {
+    size=apply(enc_all$fmca$pt$pt,1,max)
+    df_size=data.frame(descriptor=names(size),size=size)
+  }
+  if(sizeLine=="default")
+  {
+    size=apply(enc_all$fmca$pt$pt,1,sum)
+    df_size=data.frame(descriptor=names(size),size=size)
+  }
+  if(sizeLine=="none"){
+    size=apply(enc_all$fmca$pt$pt,1,sum)
+    df_size=data.frame(descriptor=names(size),size=1)
+  }
+  fdlist=list()
+  #if(is.null(vecteurPropre)){vecteurPropre=rep(1,ncomp)}
+    alpha <- enc_all$fmca$alpha[[harm]] # selection des alpha
+    alpha[is.na(alpha)]=0
+    fdObj <- fd(alpha, enc_all$fmca$basis)#utilisation de la fonction fd pour obtenir les fonctions propres
+    rangex <- fdObj$basis$rangeval
+    nBasis <- fdObj$basis$nbasis
+    fdlist[[harm]] <- eval.fd(seq(0,1,length=100), fdObj) #utilisation de la fonction eval.fd pour avoir un nombre discret de points
+     matres=fdlist[[harm]]
+  # On obtient une matrice avec 100 lignes nbAttributs colonnes (valable pour l'axe 1)
+  fdres=as.data.frame(matres);fdres[,"time"]=seq(0,1,length=100)
+  ggfdmat=reshape(fdres,direction="long",varying=list(colnames(matres)),times=colnames(matres),timevar="descriptor",v.names="score")
+     ggfdmat=merge(ggfdmat,df_size,by="descriptor")
+     if(sizeLine!="none")
+     {
+       p_exp=ggplot(ggfdmat[ggfdmat[,"descriptor"]!="stop",],aes(x=time,y=score,color=descriptor,size=size))+geom_line()+scale_color_manual(values=colors)+theme_bw()+ scale_size(range = c(0,maxSize))
+     }
+     else
+     {
+       p_exp=ggplot(ggfdmat[ggfdmat[,"descriptor"]!="stop",],aes(x=time,y=score,color=descriptor))+geom_line()+scale_color_manual(values=colors)+theme_bw()
+     }
+
+
+  listing=list(p_exp=p_exp,fdres=fdres,ggfdmat=ggfdmat)
+  return(listing)
+}
+resLda=function(enc_all,samples=NULL,type="LDA",ncomp=2,groups=substr(rownames(enc_all$fmca$pc),1,nchar_prod),subjects=NULL,replicates=NULL,colors=rainbow(20))
+{
+  if(type=="LDA")
+  {
+    if(is.null(samples))
+    {
+      res_analysis=lda(enc_all$fmca$pc[,1:ncomp],grouping=groups)
+    }
+    if(!is.null(samples))
+    {
+      res_analysis=lda(enc_all$fmca$pc[samples,1:ncomp],grouping=groups[samples])
+    }
+    res_analysis=lda(enc_all$fmca$pc[,1:ncomp],grouping=groups)
+    predTest <- predict(res_analysis)
+    vep1=res_analysis$scaling[,paste0("LD",1)]#/sqrt(sum(res_analysis$scaling[,paste0("LD",1)]^2))
+    vep2=res_analysis$scaling[,paste0("LD",2)]#/sqrt(sum(res_analysis$scaling[,paste0("LD",2)]^2))
+  #  vep1=res_analysis$scaling[,paste0("LD",3)]#/sqrt(sum(res_analysis$scaling[,paste0("LD",1)]^2))
+  #  vep2=res_analysis$scaling[,paste0("LD",4)]#/sqrt(sum(res_analysis$scaling[,paste0("LD",2)]^2))
+
+    df_ind=data.frame(predTest$x,prod=groups)
+    p_ind=ggplot(data=df_ind,aes(x=LD1,y=LD2,color=prod))+geom_point()+ggtitle("LDA")+theme_bw()
+
+  }
+  if(type=="CVA")
+  {
+    df_tmp=as.data.frame(enc_all$fmca$pc[,1:ncomp])
+    df_tmp[,"product"]=df_tmp[,"subject"]=df_tmp[,"rep"]=NA
+    # rnames=rownames(enc_all$fmca$pc)
+    # ncharr=nchar(rnames)
+    # for(i in 1:nrow(df_tmp))
+    # {
+    #   df_tmp[i,"product"]=substr(rnames[i],1,ncharr[i]-4)
+    #   df_tmp[i,"subject"]=substr(rnames[i],ncharr[i]-3,ncharr[i]-1)
+    #   df_tmp[i,"rep"]=substr(rnames[i],ncharr[i],ncharr[i])
+    # }
+    # print(dim(df_tmp))
+    # print(df_tmp)
+    df_tmp[,"product"]=groups
+    df_tmp[,"subject"]=subjects
+    df_tmp[,"rep"]=replicates
+    res_cva=CVA(df_tmp,option="OneWayANOVA")
+    statF=res_cva$Stats$F
+    res_analysis=turnToCVAgg(res_cva)
+    p_cva=plotCVAgg(res_analysis,type="distanceBiplot")+ggtitle(paste0("F=", statF))
+    p_ind=plotCVAgg(res_analysis,type="ind")+ggtitle(paste0("F=", statF))
+    vep1=res_analysis$eigenVectors[,1]
+    vep2=res_analysis$eigenVectors[,2]
+  }
+  p_h1=trajectoiresPropres(enc_all,vecteurPropre=vep1,colors=colors)$p_exp
+  p_h2=trajectoiresPropres(enc_all,vecteurPropre=vep2,colors=colors)$p_exp
+  return(list(res=res_analysis,p_ind=p_ind,p_h1=p_h1,p_h2=p_h2,vep1=vep1,vep2=vep2,df_ind=df_ind))
+}
+
