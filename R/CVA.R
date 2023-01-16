@@ -2,7 +2,7 @@
 #' Performs the Canonical Variate Analysis (CVA) for a dataset of sensory profile
 #' @param data data whose colnames are the names defined as product, subject, replicate, first Attribute, .... ,last Attribute
 #' @param test MANOVA statistic used for the test. By default "Hotelling-Lawley" but "Wilks", "Roy" and "Pilai" are also available
-#' @param option Corresponds to the choice of the model used in CVA :"tw" for Two-Way ANOVA, "ow", for One-Way ANOVA, "tws" for the Two-Way ANOVA without taking into account the subject effect in the ellipses, "mam" for the multivariate MAM model (taking the scaling effect into account) "overall" for the multivariate model taking only the psychological scaling effect into account. By default "tw". Note that the subject effect is random.
+#' @param option Corresponds to the choice of the model used in CVA :"tw" for Two-Way ANOVA (default), "1w", for One-Way ANOVA, "tws" for the Two-Way ANOVA without taking into account the subject effect in the ellipses, "mam" for the multivariate MAM model (taking the scaling effect into account) "overall" for the multivariate model taking only the psychological scaling effect into account. By default "tw". Note that the subject effect is random.
 #' @param hotellingTableBool if TRUE, the Hotelling table (where the multidimensional differences between products are tested) is calculated
 #' @param nbAxes  either a number of axes or  "auto" which return a number of axes equaling the number of significant dimensions. "auto" by default
 #' @param alpha limit of the test of significant dimensions. By default 0.05
@@ -320,6 +320,11 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
             I = nbProducts, ddlW = (nbSubjects - 1) * (nbProducts -
                 2), p = nbAttributes, alpha = 0.05)
     }
+    if(option=="1w")
+    {
+      nbDimSig =getNumberOfSignificantDimensionsOfCVA(eigVal,
+                                                       I=nbProducts, ddlW=nbProducts*nbSubjects*nbReplicates-nbProducts-1, p=nbAttributes, alpha = 0.05)
+    }
     if (nbAxes == "auto") {
         nbAxes = max(2, nbDimSig)
     }
@@ -401,13 +406,26 @@ function (data, test = "Hotelling-Lawley", option = "tw", hotellingTableBool = T
             tabtot = hotellingTable(matCva = pureData, vep = eigVec[,
                 1:nbAxes], axes = c(1:nbAxes), colAttributes = 3:dim(CenteredProductSubjectTable)[2])
         }
-        if (option != "mam" && option != "overall" && option !=
-            "tws") {
+        if (option == "tw") {
             tabtot = hotellingTable(matCva = CenteredProductSubjectTable,
                 vep = eigVec[, 1:nbAxes], axes = c(1:nbAxes),
                 colAttributes = 3:dim(CenteredProductSubjectTable)[2],
                 productName = productName)
         }
+      if (option == "ow") {
+        tabtot = hotellingTable(matCva = CenteredProductSubjectTable,
+                                vep = eigVec[, 1:nbAxes], axes = c(1:nbAxes),
+                                colAttributes = 3:dim(CenteredProductSubjectTable)[2],
+                                productName = productName)
+      }
+      if (option == "1w") {
+        df1w=data.frame(productName=data[,productName],centeredData[, Attributes])
+        colnames(df1w)=c(productName,Attributes)
+        tabtot = hotellingTable(matCva =df1w ,
+                                vep = eigVec[, 1:nbAxes], axes = c(1:nbAxes),
+                                colAttributes = 2:dim(df1w)[2],
+                                productName = productName)
+      }
     }
     resultList = list(IndivCoord = individuals, VarCoord = variables,
         NbDimSig = nbDimSig, HotellingTable = tabtot, ConditioningOfW = ConditioningOfW,

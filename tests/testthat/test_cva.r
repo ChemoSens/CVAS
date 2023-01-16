@@ -11,22 +11,22 @@ rescva_tw=CVA(cheeses,representation="twoMaps",option="tw",productName="ProductC
 rescva_tws=CVA(cheeses,representation="twoMaps",option="tws",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 rescva_mam=CVA(cheeses,representation="twoMaps",option="mam",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 rescva_overall=CVA(cheeses,representation="twoMaps",option="overall",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
-rescva_1w=CVA(cheeses,representation="twoMaps",option="1w",nbAxes=2,productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+rescva_1w=CVA(cheeses,representation="twoMaps",option="1w",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 
 rescva_owb=CVA(cheeses,option="ow",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 rescva_twb=CVA(cheeses,option="tw",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 rescva_twsb=CVA(cheeses,option="tws",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 rescva_mamb=CVA(cheeses,option="mam",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 rescva_overallb=CVA(cheeses,option="overall",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
-rescva_1wb=CVA(cheeses,option="1w",nbAxes=2,productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
+rescva_1wb=CVA(cheeses,option="1w",productName="ProductCode",subjectName="SubjectCode",replicateName="Replicate",sessionName="Session")
 
-resManova=manova(as.matrix(cheeses[,-c(1:4)])~cheeses[,"ProductCode"])
-summary(resManova,test="Wilks")
-rescva_ow$Stats
+PlotCVA(rescva_1wb)
+PlotCVA(rescva_owb)
+PlotCVA(rescva_twsb)
+PlotCVA(rescva_twb)
+PlotCVA(rescva_overallb)
+PlotCVA(rescva_mamb)
 
-resManova=manova(as.matrix(cheeses[,-c(1:4)])~cheeses[,"ProductCode"]+cheeses[,"SubjectCode"])
-summary(resManova,test="Wilks")
-rescva_tws$Stats
 
 
 # Comparison between cva 1w et lda

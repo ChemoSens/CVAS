@@ -24,7 +24,7 @@ CVA(
 
 \item{test}{MANOVA statistic used for the test. By default "Hotelling-Lawley" but "Wilks", "Roy" and "Pilai" are also available}
 
-\item{option}{Corresponds to the choice of the model used in CVA :"tw" for Two-Way ANOVA, "ow", for One-Way ANOVA, "tws" for the Two-Way ANOVA without taking into account the subject effect in the ellipses, "mam" for the multivariate MAM model (taking the scaling effect into account) "overall" for the multivariate model taking only the psychological scaling effect into account. By default "tw". Note that the subject effect is random.}
+\item{option}{Corresponds to the choice of the model used in CVA :"tw" for Two-Way ANOVA (default), "1w", for One-Way ANOVA, "tws" for the Two-Way ANOVA without taking into account the subject effect in the ellipses, "mam" for the multivariate MAM model (taking the scaling effect into account) "overall" for the multivariate model taking only the psychological scaling effect into account. By default "tw". Note that the subject effect is random.}
 
 \item{hotellingTableBool}{if TRUE, the Hotelling table (where the multidimensional differences between products are tested) is calculated}
 

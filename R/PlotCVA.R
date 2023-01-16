@@ -193,7 +193,7 @@ function (res.CVA, panellists = "none", confInt = 0.9, ellipsesType = "barycentr
                 round(res.CVA$Stats$Stat, digits = 3), ", F=",
                 round(res.CVA$Stats$F, digits = 3), " (p=", FriendlyPValue(res.CVA$Stats$pval),
                 ")\n", "Confidence ellipses", "=", confInt *
-                  100, "%", sep = "")
+                  100, "%, option=",res.CVA$option, sep = "")
             if (biplotBool) {
                 graphWidth = 7
             }
